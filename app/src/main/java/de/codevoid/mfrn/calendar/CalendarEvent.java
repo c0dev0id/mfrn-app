@@ -15,6 +15,8 @@ public class CalendarEvent {
     public OffsetDateTime endDate;
     public String descriptionHtml;       // raw HTML from JSON-LD
     public int participantCount;
+    public int maxParticipants;          // 0 = unlimited / not set
+    public String registrationDeadline; // null if not set
     public List<String> participants;
     public String location;  // null if no physical location set
 

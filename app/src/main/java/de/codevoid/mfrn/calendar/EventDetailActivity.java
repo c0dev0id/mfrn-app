@@ -41,6 +41,7 @@ public class EventDetailActivity extends AppCompatActivity {
         TextView     tvDescription        = findViewById(R.id.tv_description);
         LinearLayout sectionParticipants  = findViewById(R.id.section_participants);
         TextView     tvParticipantsHeader = findViewById(R.id.tv_participants_header);
+        TextView     tvParticipantsMeta   = findViewById(R.id.tv_participants_meta);
         LinearLayout participantList      = findViewById(R.id.participant_list);
 
         String url   = getIntent().getStringExtra(EXTRA_EVENT_URL);
@@ -81,8 +82,16 @@ public class EventDetailActivity extends AppCompatActivity {
 
                     // Participants section
                     if (event.participants != null && !event.participants.isEmpty()) {
-                        tvParticipantsHeader.setText(
-                                event.participantCount + " Teilnehmer");
+                        String header = event.participantCount + " Teilnehmer";
+                        if (event.maxParticipants > 0)
+                            header += " / " + event.maxParticipants;
+                        tvParticipantsHeader.setText(header);
+
+                        if (event.registrationDeadline != null) {
+                            tvParticipantsMeta.setText("Anmeldeschluss: " + event.registrationDeadline);
+                            tvParticipantsMeta.setVisibility(View.VISIBLE);
+                        }
+
                         for (String name : event.participants) {
                             TextView tv = new TextView(this);
                             tv.setText(name);

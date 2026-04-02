@@ -83,14 +83,16 @@ public class CalendarRepository {
             } catch (Exception ignored) {}
         }
 
-        // Participant count from dl/dt/dd structure
+        // Structured fields from dl/dt/dd
         for (Element dt : doc.select("dt")) {
-            if (dt.text().trim().equals("Teilnehmer")) {
-                Element dd = dt.nextElementSibling();
-                if (dd != null && dd.tagName().equals("dd")) {
-                    event.participantCount = parseInt(dd.text().trim());
-                }
-                break;
+            Element dd = dt.nextElementSibling();
+            if (dd == null || !dd.tagName().equals("dd")) continue;
+            String label = dt.text().trim();
+            String value = dd.text().trim();
+            switch (label) {
+                case "Teilnehmer":              event.participantCount   = parseInt(value); break;
+                case "Maximale Teilnehmeranzahl": event.maxParticipants  = parseInt(value); break;
+                case "Anmeldeschluss":          event.registrationDeadline = value;         break;
             }
         }
 
