@@ -6,4 +6,7 @@
     <string name="action_login">Anmelden</string>
     <string name="error_login_failed">Anmeldung fehlgeschlagen.</string>
     <string name="welcome">Willkommen, %1$s!</string>
+    <string name="nav_calendar">Kalender</string>
+    <string name="nav_messages">Nachrichten</string>
+    <string name="nav_filebase">Touren</string>
 </resources>
