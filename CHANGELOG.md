@@ -8,4 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial project scaffold: Gradle build, CI/CD workflow, app skeleton with bottom navigation (Calendar, Messages, Filebase)
+- Login screen (Phase 1): username/password form authenticating against the MFRN WoltLab forum
+- `MfrnClient`: HTTP client handling WoltLab's double-submit CSRF login flow (XSRF-TOKEN cookie + `t` form field)
+- Initial project scaffold: Gradle build, CI/CD workflow, launcher icons
