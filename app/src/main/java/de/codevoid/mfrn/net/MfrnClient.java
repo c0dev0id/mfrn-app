@@ -65,10 +65,12 @@ public class MfrnClient {
         if (xsrfToken == null) return false;
 
         // Step 3: POST login
+        // xsrfToken is the raw cookie value (already percent-encoded from Set-Cookie header).
+        // addEncoded() avoids double-encoding; the server decodes once and matches its stored token.
         FormBody form = new FormBody.Builder()
                 .add("username", username)
                 .add("password", password)
-                .add("t", xsrfToken)
+                .addEncoded("t", xsrfToken)
                 .build();
 
         Request postReq = new Request.Builder().url(LOGIN_URL).post(form).build();
