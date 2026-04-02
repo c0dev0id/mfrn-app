@@ -28,20 +28,24 @@ public class MfrnClient {
     private static final String LOGIN_URL = BASE_URL + "/wcf/login/";
 
     private final OkHttpClient http;
-    private final Map<String, List<Cookie>> cookieStore = new HashMap<>();
+    // Keyed by host → cookie name → cookie. Map-of-maps so each response
+    // only updates the cookies it sets, without wiping unrelated ones.
+    private final Map<String, Map<String, Cookie>> cookieStore = new HashMap<>();
 
     public MfrnClient() {
         http = new OkHttpClient.Builder()
                 .cookieJar(new CookieJar() {
                     @Override
                     public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-                        cookieStore.put(url.host(), cookies);
+                        Map<String, Cookie> jar = cookieStore.computeIfAbsent(
+                                url.host(), k -> new HashMap<>());
+                        for (Cookie c : cookies) jar.put(c.name(), c);
                     }
 
                     @Override
                     public List<Cookie> loadForRequest(HttpUrl url) {
-                        List<Cookie> cookies = cookieStore.get(url.host());
-                        return cookies != null ? cookies : new ArrayList<>();
+                        Map<String, Cookie> jar = cookieStore.get(url.host());
+                        return jar != null ? new ArrayList<>(jar.values()) : new ArrayList<>();
                     }
                 })
                 .followRedirects(false)
@@ -93,11 +97,9 @@ public class MfrnClient {
     }
 
     private String getCookieValue(String host, String name) {
-        List<Cookie> cookies = cookieStore.get(host);
-        if (cookies == null) return null;
-        for (Cookie c : cookies) {
-            if (c.name().equals(name)) return c.value();
-        }
-        return null;
+        Map<String, Cookie> jar = cookieStore.get(host);
+        if (jar == null) return null;
+        Cookie c = jar.get(name);
+        return c != null ? c.value() : null;
     }
 }
