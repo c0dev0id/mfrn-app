@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import de.codevoid.mfrn.net.MfrnClient;
@@ -69,9 +70,8 @@ public class CalendarRepository {
                 if (start != null) event.startDate = OffsetDateTime.parse(start);
                 if (end   != null) event.endDate   = OffsetDateTime.parse(end);
 
-                // Description may contain HTML — strip tags
-                String desc = ld.optString("description", "");
-                event.description = Jsoup.parse(desc).text();
+                // Keep HTML so the UI can render links and formatting
+                event.descriptionHtml = ld.optString("description", "");
 
                 // Location: only set for Place, not VirtualLocation
                 JSONObject loc = ld.optJSONObject("location");
@@ -83,9 +83,8 @@ public class CalendarRepository {
             } catch (Exception ignored) {}
         }
 
-        // Participant count from dl/dt/dd structure — more reliable than full-text search
-        Elements dts = doc.select("dt");
-        for (Element dt : dts) {
+        // Participant count from dl/dt/dd structure
+        for (Element dt : doc.select("dt")) {
             if (dt.text().trim().equals("Teilnehmer")) {
                 Element dd = dt.nextElementSibling();
                 if (dd != null && dd.tagName().equals("dd")) {
@@ -93,6 +92,14 @@ public class CalendarRepository {
                 }
                 break;
             }
+        }
+
+        // Participant names from the confirmed-participants list
+        Elements nameEls = doc.select("ul.calendarParticipantList li a.userLink");
+        if (!nameEls.isEmpty()) {
+            List<String> names = new ArrayList<>();
+            for (Element el : nameEls) names.add(el.text().trim());
+            event.participants = Collections.unmodifiableList(names);
         }
     }
 

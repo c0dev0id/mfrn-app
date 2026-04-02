@@ -3,8 +3,11 @@ package de.codevoid.mfrn.calendar;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import java.time.format.DateTimeFormatter;
@@ -32,17 +35,20 @@ public class EventDetailActivity extends AppCompatActivity {
             getSupportActionBar().setTitle(getIntent().getStringExtra(EXTRA_EVENT_TITLE));
         }
 
-        TextView tvTitle        = findViewById(R.id.tv_title);
-        TextView tvDate         = findViewById(R.id.tv_date);
-        TextView tvLocation     = findViewById(R.id.tv_location);
-        TextView tvParticipants = findViewById(R.id.tv_participants);
-        TextView tvDescription  = findViewById(R.id.tv_description);
+        TextView     tvTitle              = findViewById(R.id.tv_title);
+        TextView     tvDate               = findViewById(R.id.tv_date);
+        TextView     tvLocation           = findViewById(R.id.tv_location);
+        TextView     tvDescription        = findViewById(R.id.tv_description);
+        LinearLayout sectionParticipants  = findViewById(R.id.section_participants);
+        TextView     tvParticipantsHeader = findViewById(R.id.tv_participants_header);
+        LinearLayout participantList      = findViewById(R.id.participant_list);
 
         String url   = getIntent().getStringExtra(EXTRA_EVENT_URL);
         int    id    = getIntent().getIntExtra(EXTRA_EVENT_ID, 0);
         String title = getIntent().getStringExtra(EXTRA_EVENT_TITLE);
 
         tvTitle.setText(title);
+        tvDescription.setMovementMethod(LinkMovementMethod.getInstance());
 
         CalendarEvent event = new CalendarEvent(id, title, url, "", "");
         CalendarRepository repo = new CalendarRepository(((App) getApplication()).getClient());
@@ -51,24 +57,41 @@ public class EventDetailActivity extends AppCompatActivity {
             try {
                 repo.loadDetail(event);
                 runOnUiThread(() -> {
-                    DateTimeFormatter fmt = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT);
+                    // Date
                     if (event.startDate != null) {
+                        DateTimeFormatter fmt = DateTimeFormatter.ofLocalizedDateTime(
+                                FormatStyle.MEDIUM, FormatStyle.SHORT);
                         String dateStr = event.startDate.format(fmt);
                         if (event.endDate != null) dateStr += " – " + event.endDate.format(fmt);
                         tvDate.setText(dateStr);
                     }
 
+                    // Location
                     if (event.location != null) {
                         tvLocation.setText(event.location);
                         tvLocation.setVisibility(View.VISIBLE);
                         tvLocation.setOnClickListener(v -> openInMaps(event.location));
                     }
 
-                    if (event.participantCount > 0) {
-                        tvParticipants.setText(event.participantCount + " Teilnehmer");
+                    // Description — render HTML with links and newlines
+                    if (event.descriptionHtml != null && !event.descriptionHtml.isEmpty()) {
+                        tvDescription.setText(Html.fromHtml(
+                                event.descriptionHtml, Html.FROM_HTML_MODE_COMPACT));
                     }
 
-                    tvDescription.setText(event.description);
+                    // Participants section
+                    if (event.participants != null && !event.participants.isEmpty()) {
+                        tvParticipantsHeader.setText(
+                                event.participantCount + " Teilnehmer");
+                        for (String name : event.participants) {
+                            TextView tv = new TextView(this);
+                            tv.setText(name);
+                            tv.setTextSize(14);
+                            tv.setPadding(0, 6, 0, 6);
+                            participantList.addView(tv);
+                        }
+                        sectionParticipants.setVisibility(View.VISIBLE);
+                    }
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> tvDescription.setText(e.getMessage()));

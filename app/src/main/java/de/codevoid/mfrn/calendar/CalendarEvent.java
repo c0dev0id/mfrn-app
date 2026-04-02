@@ -1,6 +1,7 @@
 package de.codevoid.mfrn.calendar;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 public class CalendarEvent {
     public final int id;
@@ -12,8 +13,9 @@ public class CalendarEvent {
     // Populated on detail fetch
     public OffsetDateTime startDate;
     public OffsetDateTime endDate;
-    public String description;
+    public String descriptionHtml;       // raw HTML from JSON-LD
     public int participantCount;
+    public List<String> participants;
     public String location;  // null if no physical location set
 
     public CalendarEvent(int id, String title, String url, String dateLabel, String author) {
