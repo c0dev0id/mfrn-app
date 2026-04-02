@@ -1,10 +1,19 @@
 package de.codevoid.mfrn;
 
 import android.os.Bundle;
+import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import de.codevoid.mfrn.net.MfrnClient;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private MfrnClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,5 +35,15 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
+
+        client = new MfrnClient();
+        // TODO: show login screen, pass credentials from user input
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executor.shutdown();
     }
 }
