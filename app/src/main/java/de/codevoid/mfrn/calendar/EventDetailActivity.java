@@ -1,7 +1,10 @@
 package de.codevoid.mfrn.calendar;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import java.time.format.DateTimeFormatter;
@@ -31,6 +34,7 @@ public class EventDetailActivity extends AppCompatActivity {
 
         TextView tvTitle        = findViewById(R.id.tv_title);
         TextView tvDate         = findViewById(R.id.tv_date);
+        TextView tvLocation     = findViewById(R.id.tv_location);
         TextView tvParticipants = findViewById(R.id.tv_participants);
         TextView tvDescription  = findViewById(R.id.tv_description);
 
@@ -41,8 +45,7 @@ public class EventDetailActivity extends AppCompatActivity {
         tvTitle.setText(title);
 
         CalendarEvent event = new CalendarEvent(id, title, url, "", "");
-        App app = (App) getApplication();
-        CalendarRepository repo = new CalendarRepository(app.getClient());
+        CalendarRepository repo = new CalendarRepository(((App) getApplication()).getClient());
 
         executor.execute(() -> {
             try {
@@ -54,15 +57,31 @@ public class EventDetailActivity extends AppCompatActivity {
                         if (event.endDate != null) dateStr += " – " + event.endDate.format(fmt);
                         tvDate.setText(dateStr);
                     }
+
+                    if (event.location != null) {
+                        tvLocation.setText(event.location);
+                        tvLocation.setVisibility(View.VISIBLE);
+                        tvLocation.setOnClickListener(v -> openInMaps(event.location));
+                    }
+
                     if (event.participantCount > 0) {
                         tvParticipants.setText(event.participantCount + " Teilnehmer");
                     }
+
                     tvDescription.setText(event.description);
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> tvDescription.setText(e.getMessage()));
             }
         });
+    }
+
+    private void openInMaps(String address) {
+        Uri uri = Uri.parse("geo:0,0?q=" + Uri.encode(address));
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 
     @Override

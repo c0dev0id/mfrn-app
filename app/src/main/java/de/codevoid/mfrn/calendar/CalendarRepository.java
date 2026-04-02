@@ -58,7 +58,7 @@ public class CalendarRepository {
         String html = fetch(event.url);
         Document doc = Jsoup.parse(html);
 
-        // JSON-LD gives us clean ISO dates and description
+        // JSON-LD gives us clean ISO dates, description, and location
         for (Element script : doc.select("script[type=application/ld+json]")) {
             try {
                 JSONObject ld = new JSONObject(script.html());
@@ -69,26 +69,30 @@ public class CalendarRepository {
                 if (start != null) event.startDate = OffsetDateTime.parse(start);
                 if (end   != null) event.endDate   = OffsetDateTime.parse(end);
 
-                // Description may contain HTML entities — strip tags
+                // Description may contain HTML — strip tags
                 String desc = ld.optString("description", "");
                 event.description = Jsoup.parse(desc).text();
+
+                // Location: only set for Place, not VirtualLocation
+                JSONObject loc = ld.optJSONObject("location");
+                if (loc != null && "Place".equals(loc.optString("@type"))) {
+                    String addr = loc.optString("address", "").trim();
+                    if (!addr.isEmpty()) event.location = addr;
+                }
                 break;
             } catch (Exception ignored) {}
         }
 
-        // Participant count: "Teilnehmer  29"
-        Element partEl = doc.selectFirst("dl.calendarEventParticipation dd, span.calendarEventParticipants");
-        if (partEl == null) {
-            // Fallback: look for the number next to "Teilnehmer" text
-            for (Element el : doc.select("*")) {
-                if (el.ownText().matches("\\d+") && el.parent() != null
-                        && el.parent().text().contains("Teilnehmer")) {
-                    event.participantCount = parseInt(el.ownText());
-                    break;
+        // Participant count from dl/dt/dd structure — more reliable than full-text search
+        Elements dts = doc.select("dt");
+        for (Element dt : dts) {
+            if (dt.text().trim().equals("Teilnehmer")) {
+                Element dd = dt.nextElementSibling();
+                if (dd != null && dd.tagName().equals("dd")) {
+                    event.participantCount = parseInt(dd.text().trim());
                 }
+                break;
             }
-        } else {
-            event.participantCount = parseInt(partEl.text().trim());
         }
     }
 
