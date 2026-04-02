@@ -5,3 +5,4 @@ local.properties
 *.iml
 .idea/
 config.toml
+*_debug_*.txt
