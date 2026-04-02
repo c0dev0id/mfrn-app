@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MFRN</string>
+    <string name="hint_username">Benutzername</string>
+    <string name="hint_password">Kennwort</string>
+    <string name="action_login">Anmelden</string>
+    <string name="error_login_failed">Anmeldung fehlgeschlagen.</string>
+    <string name="welcome">Willkommen, %1$s!</string>
 </resources>
